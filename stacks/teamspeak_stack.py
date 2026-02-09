@@ -48,7 +48,7 @@ class TeamspeakStack(Stack):
         # User data script
         user_data = ec2.UserData.for_linux()
         user_data.add_commands(
-            "yum update -y",
+            "yum update -y --exclude=kernel*",
             "yum install -y docker",
             "systemctl start docker",
             "systemctl enable docker",
@@ -154,7 +154,8 @@ class TeamspeakStack(Stack):
                 "Operation": ["Install"],
                 "RebootOption": ["RebootIfNeeded"]
             },
-            association_name="TeamSpeakPatchBaseline"
+            association_name="TeamSpeakPatchBaseline",
+            apply_only_at_cron_interval=True
         )
 
         # Outputs
