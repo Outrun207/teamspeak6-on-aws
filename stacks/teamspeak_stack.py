@@ -187,10 +187,6 @@ class TeamspeakStack(Stack):
             value=sg.security_group_id,
             description="Security group ID"
         )
-        CfnOutput(self, "VolumeId",
-            value=instance.instance.block_device_mappings[0].ebs.volume_id,
-            description="EBS volume ID (contains TeamSpeak data)"
-        )
 
         # Monitoring - SNS topic and CloudWatch alarm
         if alert_email:
