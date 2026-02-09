@@ -199,7 +199,13 @@ class TeamspeakStack(Stack):
             )
 
             alarm = cw.Alarm(self, "InstanceDownAlarm",
-                metric=instance.metric_status_check_failed(period=cw.Duration.minutes(5)),
+                metric=cw.Metric(
+                    namespace="AWS/EC2",
+                    metric_name="StatusCheckFailed",
+                    dimensions_map={"InstanceId": instance.instance_id},
+                    period=cw.Duration.minutes(5),
+                    statistic="Maximum"
+                ),
                 threshold=1,
                 evaluation_periods=2,
                 datapoints_to_alarm=2,
