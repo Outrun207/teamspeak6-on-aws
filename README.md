@@ -36,7 +36,6 @@ Edit `config.json` to customize deployment:
   "subnet_id": null,
   "teamspeak_image": "teamspeaksystems/teamspeak6-server:latest",
   "watchtower_image": "containrrr/watchtower",
-  "alert_email": null,
   "instance_type": "t3.micro",
   "volume_size": 13,
   "patch_schedule": "cron(0 2 ? * SUN *)",
@@ -51,9 +50,6 @@ Edit `config.json` to customize deployment:
 **Container Images:**
 - `teamspeak_image`: Pin a specific version (e.g., `"teamspeaksystems/teamspeak6-server:6.0.1"`) or use `latest`
 - `watchtower_image`: Customize if needed (default: `"containrrr/watchtower"`)
-
-**Monitoring:**
-- `alert_email`: Email for server alerts (or use `ALERT_EMAIL` environment variable for GitHub Actions)
 
 **Instance:**
 - `instance_type`: EC2 instance type (default: `"t3.micro"`, options: `"t3.small"`, `"t3.medium"`, etc.)
@@ -147,14 +143,9 @@ Replace:
    - **Name**: `AWS_REGION`
    - **Value**: `us-east-1` (or your preferred region)
 
-   - **Name**: `ALERT_EMAIL`
-   - **Value**: Your email address for server alerts
-
 **Step 6: Deploy**
 
 Push to `main` branch to trigger deployment.
-
-**Note:** You'll receive an SNS subscription confirmation email on first deployment - click the link to confirm.
 
 ## Connecting
 

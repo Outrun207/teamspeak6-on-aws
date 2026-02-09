@@ -3,7 +3,6 @@
   "subnet_id": null,
   "teamspeak_image": "teamspeaksystems/teamspeak6-server:latest",
   "watchtower_image": "containrrr/watchtower",
-  "alert_email": null,
   "instance_type": "t3.micro",
   "volume_size": 13,
   "patch_schedule": "cron(0 2 ? * SUN *)",
