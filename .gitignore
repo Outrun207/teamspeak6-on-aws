@@ -1,0 +1,12 @@
+cdk.out/
+.cdk.staging/
+*.pyc
+__pycache__/
+.env
+.venv/
+venv/
+*.swp
+*.swo
+.DS_Store
+outputs.json
+cdk.context.json

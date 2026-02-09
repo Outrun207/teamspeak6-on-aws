@@ -1,0 +1,86 @@
+name: Deploy TeamSpeak Server
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+
+      - name: CDK Bootstrap
+        run: |
+          if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region ${{ secrets.AWS_REGION }} 2>/dev/null; then
+            echo "Bootstrapping CDK..."
+            cdk bootstrap aws://$(aws sts get-caller-identity --query Account --output text)/${{ secrets.AWS_REGION }}
+          else
+            echo "CDK already bootstrapped"
+          fi
+
+      - name: Run Automated Security Helper
+        run: |
+          git clone https://github.com/aws-samples/automated-security-helper.git /tmp/ash
+          cd /tmp/ash
+          docker run --rm -v "$(pwd):/src" -v "${{ github.workspace }}:/target" public.ecr.aws/aws-samples/automated-security-helper:latest --source-dir /target --output-dir /target/ash-output --no-checkov
+          
+      - name: Upload ASH Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ash-security-scan
+          path: ash-output/
+
+      - name: Check ASH Results
+        run: |
+          if [ -f ash-output/aggregated_results.txt ]; then
+            if grep -i "critical\|high" ash-output/aggregated_results.txt; then
+              echo "Critical or High severity findings detected"
+              exit 1
+            fi
+          fi
+
+      - name: CDK Synth and NIST 800-53 Validation
+        env:
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+        run: |
+          cdk synth
+          if grep -q "Error" cdk.out/assembly-TeamspeakStack/*.json; then
+            echo "NIST 800-53 validation failed"
+            exit 1
+          fi
+
+      - name: CDK Deploy
+        env:
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+        run: cdk deploy --require-approval never --outputs-file outputs.json
+
+      - name: Display Connection Info
+        run: |
+          echo "=== TeamSpeak Server Deployed ==="
+          cat outputs.json | jq -r '.TeamspeakStack | to_entries[] | "\(.key): \(.value)"'
