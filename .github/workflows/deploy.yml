@@ -112,9 +112,11 @@ jobs:
 
       - name: CDK Bootstrap
         run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "::add-mask::$ACCOUNT_ID"
           if ! aws cloudformation describe-stacks --stack-name CDKToolkit --region ${{ secrets.AWS_REGION }} 2>/dev/null; then
             echo "Bootstrapping CDK..."
-            cdk bootstrap aws://$(aws sts get-caller-identity --query Account --output text)/${{ secrets.AWS_REGION }}
+            cdk bootstrap aws://$ACCOUNT_ID/${{ secrets.AWS_REGION }}
           else
             echo "CDK already bootstrapped"
           fi
