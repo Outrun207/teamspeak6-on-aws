@@ -1,12 +1,9 @@
 from aws_cdk import (
     Stack,
+    Duration,
     aws_ec2 as ec2,
     aws_iam as iam,
     aws_ssm as ssm,
-    aws_sns as sns,
-    aws_sns_subscriptions as sns_subs,
-    aws_cloudwatch as cw,
-    aws_cloudwatch_actions as cw_actions,
     CfnOutput,
     Aspects,
 )
@@ -22,9 +19,6 @@ class TeamspeakStack(Stack):
         # Load config
         with open("config.json") as f:
             config = json.load(f)
-
-        # Get alert email from env var (for GitHub secrets) or config
-        alert_email = os.environ.get("ALERT_EMAIL") or config.get("alert_email")
 
         # VPC - use default or specified
         if config.get("vpc_id"):
@@ -188,33 +182,6 @@ class TeamspeakStack(Stack):
             value=sg.security_group_id,
             description="Security group ID"
         )
-
-        # Monitoring - SNS topic and CloudWatch alarm
-        if alert_email:
-            topic = sns.Topic(self, "AlertTopic",
-                display_name="TeamSpeak Server Alerts"
-            )
-            topic.add_subscription(
-                sns_subs.EmailSubscription(alert_email)
-            )
-
-            alarm = cw.Alarm(self, "InstanceDownAlarm",
-                metric=cw.Metric(
-                    namespace="AWS/EC2",
-                    metric_name="StatusCheckFailed",
-                    dimensions_map={"InstanceId": instance.instance_id},
-                    period=cw.Duration.minutes(5),
-                    statistic="Maximum"
-                ),
-                threshold=1,
-                evaluation_periods=2,
-                datapoints_to_alarm=2,
-                alarm_description="TeamSpeak server is down or unreachable",
-                treat_missing_data=cw.TreatMissingData.BREACHING
-            )
-            alarm.add_alarm_action(cw_actions.SnsAction(topic))
-
-            CfnOutput(self, "AlertEmail", value=alert_email)
 
         # Suppress cdk-nag findings that are acceptable for this use case
         NagSuppressions.add_stack_suppressions(self, [

@@ -77,8 +77,6 @@ jobs:
         run: npm install -g aws-cdk
 
       - name: CDK Synth and NIST 800-53 Validation
-        env:
-          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL || 'test@example.com' }}
         run: |
           cdk synth
           if grep -q "Error" cdk.out/assembly-TeamspeakStack/*.json; then
@@ -122,8 +120,6 @@ jobs:
           fi
 
       - name: CDK Deploy
-        env:
-          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
         run: cdk deploy --require-approval never --outputs-file outputs.json
 
       - name: Display Connection Info
