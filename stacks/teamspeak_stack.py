@@ -4,6 +4,7 @@ from aws_cdk import (
     aws_iam as iam,
     aws_ssm as ssm,
     aws_sns as sns,
+    aws_sns_subscriptions as sns_subs,
     aws_cloudwatch as cw,
     aws_cloudwatch_actions as cw_actions,
     CfnOutput,
@@ -193,10 +194,9 @@ class TeamspeakStack(Stack):
             topic = sns.Topic(self, "AlertTopic",
                 display_name="TeamSpeak Server Alerts"
             )
-            topic.add_subscription(sns.Subscription(
-                endpoint=alert_email,
-                protocol=sns.SubscriptionProtocol.EMAIL
-            ))
+            topic.add_subscription(
+                sns_subs.EmailSubscription(alert_email)
+            )
 
             alarm = cw.Alarm(self, "InstanceDownAlarm",
                 metric=instance.metric_status_check_failed(period=cw.Duration.minutes(5)),
