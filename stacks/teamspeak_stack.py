@@ -58,8 +58,9 @@ class TeamspeakStack(Stack):
             "curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose",
             "chmod +x /usr/local/bin/docker-compose",
             
-            # Create TeamSpeak directory
+            # Create TeamSpeak directory with proper permissions
             "mkdir -p /opt/teamspeak/data",
+            "chmod 777 /opt/teamspeak/data",
             
             # Create docker-compose.yml
             "cat > /opt/teamspeak/docker-compose.yml << 'EOF'",
